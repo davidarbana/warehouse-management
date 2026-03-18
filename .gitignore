@@ -1,0 +1,24 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Spring Boot
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+
+# Mac
+.DS_Store
+
+# Environment / secrets
+application-local.properties

@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public ResponseDtos.OrderDetailResponse createOrder(OrderRequest.Create request, String username) {
         User client = getUser(username);
+
+        if (request.getDeadlineDate() != null && request.getDeadlineDate().isBefore(LocalDate.now())) {
+            throw new InvalidOperationException("Deadline date cannot be in the past");
+        }
 
         Order order = Order.builder()
                 .client(client)
@@ -156,22 +162,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<ResponseDtos.OrderSummaryResponse> getClientOrders(String username, OrderStatus status) {
+    public Page<ResponseDtos.OrderSummaryResponse> getClientOrders(String username, OrderStatus status, Pageable pageable) {
         User client = getUser(username);
-        List<Order> orders = status != null
-                ? orderRepository.findAllByClientAndStatusOrderBySubmittedDateDesc(client, status)
-                : orderRepository.findAllByClientOrderBySubmittedDateDesc(client);
-        return orders.stream().map(this::toSummaryResponse).collect(Collectors.toList());
+        Page<Order> orders = status != null
+                ? orderRepository.findAllByClientAndStatusOrderBySubmittedDateDesc(client, status, pageable)
+                : orderRepository.findAllByClientOrderBySubmittedDateDesc(client, pageable);
+        return orders.map(this::toSummaryResponse);
     }
 
     // ── WAREHOUSE MANAGER ──────────────────────────────────────────────────────
 
     @Override
-    public List<ResponseDtos.OrderSummaryResponse> getAllOrders(OrderStatus status) {
-        List<Order> orders = status != null
-                ? orderRepository.findAllByStatusOrderBySubmittedDateDesc(status)
-                : orderRepository.findAllByOrderBySubmittedDateDesc();
-        return orders.stream().map(this::toSummaryResponse).collect(Collectors.toList());
+    public Page<ResponseDtos.OrderSummaryResponse> getAllOrders(OrderStatus status, Pageable pageable) {
+        Page<Order> orders = status != null
+                ? orderRepository.findAllByStatusOrderBySubmittedDateDesc(status, pageable)
+                : orderRepository.findAllByOrderBySubmittedDateDesc(pageable);
+        return orders.map(this::toSummaryResponse);
     }
 
     @Override
@@ -342,6 +348,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
                 .submittedDate(order.getSubmittedDate())
+                .createdAt(order.getCreatedAt())
                 .deadlineDate(order.getDeadlineDate())
                 .totalItems(order.getItems().size())
                 .build();
@@ -382,6 +389,7 @@ public class OrderServiceImpl implements OrderService {
                 .clientUsername(order.getClient().getUsername())
                 .status(order.getStatus())
                 .submittedDate(order.getSubmittedDate())
+                .createdAt(order.getCreatedAt())
                 .deadlineDate(order.getDeadlineDate())
                 .declineReason(order.getDeclineReason())
                 .items(items)

@@ -8,6 +8,7 @@ import com.davidarbana.warehouse.exception.InvalidOperationException;
 import com.davidarbana.warehouse.repository.UserRepository;
 import com.davidarbana.warehouse.security.JwtService;
 import com.davidarbana.warehouse.service.AuthService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,5 +68,24 @@ public class AuthServiceImpl implements AuthService {
                 .username(user.getUsername())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    @Override
+    public void changePassword(AuthRequest.ChangePassword request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new InvalidOperationException("Username not found"));
+
+        if(!request.getEmail().equalsIgnoreCase(user.getEmail())) {
+                throw new InvalidOperationException("Email provided does not match the user's email");
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidOperationException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("User changed password: {}", user.getUsername());
     }
 }

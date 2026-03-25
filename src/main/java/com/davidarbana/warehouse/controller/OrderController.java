@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,9 +39,11 @@ public class OrderController {
 
     @GetMapping("/my")
     @PreAuthorize("hasRole('CLIENT')")
-    public ResponseEntity<List<ResponseDtos.OrderSummaryResponse>> getMyOrders(
-            @RequestParam(required = false) OrderStatus status, Principal principal) {
-        return ResponseEntity.ok(orderService.getClientOrders(principal.getName(), status));
+    public ResponseEntity<Page<ResponseDtos.OrderSummaryResponse>> getMyOrders(
+            @RequestParam(required = false) OrderStatus status,
+            Principal principal,
+            Pageable pageable) {
+        return ResponseEntity.ok(orderService.getClientOrders(principal.getName(), status, pageable));
     }
 
     @PostMapping("/{orderId}/items")
@@ -86,9 +90,11 @@ public class OrderController {
 
     @GetMapping
     @PreAuthorize("hasRole('WAREHOUSE_MANAGER')")
-    public ResponseEntity<List<ResponseDtos.OrderSummaryResponse>> getAllOrders(
-            @RequestParam(required = false) OrderStatus status) {
-        return ResponseEntity.ok(orderService.getAllOrders(status));
+    public ResponseEntity<Page<ResponseDtos.OrderSummaryResponse>> getAllOrders(
+            @RequestParam(required = false) OrderStatus status,
+            Pageable pageable
+            ) {
+        return ResponseEntity.ok(orderService.getAllOrders(status, pageable));
     }
 
     @GetMapping("/{orderId}")

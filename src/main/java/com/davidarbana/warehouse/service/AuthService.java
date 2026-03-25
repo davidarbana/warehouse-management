@@ -6,4 +6,6 @@ import com.davidarbana.warehouse.dto.response.ResponseDtos;
 public interface AuthService {
     ResponseDtos.AuthResponse login(AuthRequest.Login request);
     ResponseDtos.AuthResponse register(AuthRequest.Register request);
+
+    void changePassword(AuthRequest.ChangePassword request);
 }

@@ -37,6 +37,9 @@ public class Order {
     @Column
     private LocalDateTime submittedDate;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     @Column
     private LocalDate deadlineDate;
 
@@ -57,6 +60,10 @@ public class Order {
         }
         if (status == null) {
             status = OrderStatus.CREATED;
+        }
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }

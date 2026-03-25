@@ -3,6 +3,8 @@ package com.davidarbana.warehouse.service;
 import com.davidarbana.warehouse.dto.request.OrderRequest;
 import com.davidarbana.warehouse.dto.response.ResponseDtos;
 import com.davidarbana.warehouse.enums.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,10 +18,10 @@ public interface OrderService {
     ResponseDtos.OrderDetailResponse updateItemQuantity(Long orderId, Long orderItemId, OrderRequest.UpdateItem request, String username);
     ResponseDtos.OrderDetailResponse submitOrder(Long orderId, String username);
     ResponseDtos.OrderDetailResponse cancelOrder(Long orderId, String username);
-    List<ResponseDtos.OrderSummaryResponse> getClientOrders(String username, OrderStatus status);
+    Page<ResponseDtos.OrderSummaryResponse> getClientOrders(String username, OrderStatus status, Pageable pageable);
 
     // WAREHOUSE_MANAGER operations
-    List<ResponseDtos.OrderSummaryResponse> getAllOrders(OrderStatus status);
+    Page<ResponseDtos.OrderSummaryResponse> getAllOrders(OrderStatus status, Pageable pageable);
     ResponseDtos.OrderDetailResponse getOrderDetail(Long orderId);
     ResponseDtos.OrderDetailResponse approveOrder(Long orderId);
     ResponseDtos.OrderDetailResponse declineOrder(Long orderId, OrderRequest.Decline request);

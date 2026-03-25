@@ -52,13 +52,18 @@ public class TruckServiceImpl {
         Truck truck = truckRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Truck not found: " + id));
 
-        // TODO: add duplicate check for chassis/plate on update
-        if (request.getChassisNumber() != null && !truck.getChassisNumber().equalsIgnoreCase(request.getChassisNumber())){
+        if (request.getChassisNumber() != null && !truck.getChassisNumber().equalsIgnoreCase(request.getChassisNumber())) {
+            if (truckRepository.existsByChassisNumber(request.getChassisNumber())) {
+                throw new InvalidOperationException("Chassis number already in use");
+            }
             truck.setChassisNumber(request.getChassisNumber());
-        }else {
-            throw new InvalidOperationException("Chassis number already in use");
         }
-        if (request.getLicensePlate() != null) truck.setLicensePlate(request.getLicensePlate());
+        if (request.getLicensePlate() != null && !truck.getLicensePlate().equalsIgnoreCase(request.getLicensePlate())) {
+            if (truckRepository.existsByLicensePlate(request.getLicensePlate())) {
+                throw new InvalidOperationException("License plate already in use");
+            }
+            truck.setLicensePlate(request.getLicensePlate());
+        }
         if (request.getContainerVolume() != null) truck.setContainerVolume(request.getContainerVolume());
 
         truckRepository.save(truck);

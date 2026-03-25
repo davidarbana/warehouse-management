@@ -66,6 +66,7 @@ public class ResponseDtos {
         private String orderNumber;
         private OrderStatus status;
         private LocalDateTime submittedDate;
+        private LocalDateTime createdAt;
         private LocalDate deadlineDate;
         private int totalItems;
     }
@@ -78,6 +79,7 @@ public class ResponseDtos {
         private String clientUsername;
         private OrderStatus status;
         private LocalDateTime submittedDate;
+        private LocalDateTime createdAt;
         private LocalDate deadlineDate;
         private String declineReason;
         private List<OrderItemResponse> items;

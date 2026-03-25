@@ -26,4 +26,16 @@ public class AuthRequest {
         @NotBlank(message = "Role is required")
         private String role;
     }
+
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class ChangePassword {
+        @NotBlank(message = "Username is required")
+        private String username;
+        @NotBlank(message = "Email is required")
+        private String email;
+        @NotBlank(message = "Current password is required")
+        private String currentPassword;
+        @NotBlank(message = "New password is required")
+        private String newPassword;
+    }
 }

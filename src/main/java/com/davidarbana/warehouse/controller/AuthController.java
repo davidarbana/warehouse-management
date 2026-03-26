@@ -2,9 +2,11 @@ package com.davidarbana.warehouse.controller;
 
 import com.davidarbana.warehouse.dto.request.AuthRequest;
 import com.davidarbana.warehouse.dto.response.ResponseDtos;
+import com.davidarbana.warehouse.repository.TokenRepository;
 import com.davidarbana.warehouse.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final TokenRepository tokenRepository;
 
     @Operation(summary = "Login", description = "Authenticate and receive a JWT token")
     @PostMapping("/login")
@@ -36,5 +39,16 @@ public class AuthController {
     public ResponseEntity<String> changePassword(@Valid @RequestBody AuthRequest.ChangePassword request) {
         authService.changePassword(request);
         return ResponseEntity.ok("Password changed successfully");
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").substring(7);
+        tokenRepository.findByToken(token).ifPresent(t -> {
+            t.setRevoked(true);
+            t.setExpired(true);
+            tokenRepository.save(t);
+        });
+        return ResponseEntity.noContent().build();
     }
 }

@@ -2,9 +2,11 @@ package com.davidarbana.warehouse.service.impl;
 
 import com.davidarbana.warehouse.dto.request.AuthRequest;
 import com.davidarbana.warehouse.dto.response.ResponseDtos;
+import com.davidarbana.warehouse.entity.Token;
 import com.davidarbana.warehouse.entity.User;
 import com.davidarbana.warehouse.enums.Role;
 import com.davidarbana.warehouse.exception.InvalidOperationException;
+import com.davidarbana.warehouse.repository.TokenRepository;
 import com.davidarbana.warehouse.repository.UserRepository;
 import com.davidarbana.warehouse.security.JwtService;
 import com.davidarbana.warehouse.service.AuthService;
@@ -17,6 +19,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -27,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TokenRepository tokenRepository;
 
     @Override
     public ResponseDtos.AuthResponse login(AuthRequest.Login request) {
@@ -36,6 +41,23 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new InvalidOperationException("User not found"));
+
+        // revoke all existing tokens for this user
+        List<Token> validTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        validTokens.forEach(t -> {
+            t.setExpired(true);
+            t.setRevoked(true);
+        });
+        tokenRepository.saveAll(validTokens);
+
+        // save new token
+        String jwtToken = jwtService.generateToken(user);
+        tokenRepository.save(Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .expired(false)
+                .revoked(false)
+                .build());
 
         log.info("User logged in: {}", user.getUsername());
 
@@ -75,8 +97,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new InvalidOperationException("Username not found"));
 
-        if(!request.getEmail().equalsIgnoreCase(user.getEmail())) {
-                throw new InvalidOperationException("Email provided does not match the user's email");
+        if (!request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            throw new InvalidOperationException("Email provided does not match the user's email");
         }
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
